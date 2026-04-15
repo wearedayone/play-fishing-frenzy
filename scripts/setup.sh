@@ -8,6 +8,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 SERVER_PATH="$REPO_DIR/ff_agent/server.py"
 CONFIG_PATH="$REPO_DIR/CONFIG.md"
+VENV_DIR="$REPO_DIR/.venv"
 
 echo ""
 echo "  🎣 Fishing Frenzy Agent Setup"
@@ -24,26 +25,34 @@ PY_VERSION=$(python3 -c 'import sys; print(f"{sys.version_info.major}.{sys.versi
 echo "  Python: $PY_VERSION"
 
 # Step 2: Install dependencies
+# Try system pip first; if PEP 668 blocks it, fall back to a venv
 echo "  Installing dependencies..."
-if command -v pip3 &> /dev/null; then
-    pip3 install -q -r "$REPO_DIR/requirements.txt" 2>/dev/null
+PYTHON_CMD="python3"
+
+if pip3 install -q -r "$REPO_DIR/requirements.txt" 2>/dev/null; then
+    echo "  Dependencies installed (system)."
+elif python3 -m pip install -q -r "$REPO_DIR/requirements.txt" 2>/dev/null; then
+    echo "  Dependencies installed (system)."
 else
-    python3 -m pip install -q -r "$REPO_DIR/requirements.txt" 2>/dev/null
+    echo "  System pip blocked (PEP 668). Creating virtual environment..."
+    python3 -m venv "$VENV_DIR"
+    "$VENV_DIR/bin/pip" install -q -r "$REPO_DIR/requirements.txt"
+    PYTHON_CMD="$VENV_DIR/bin/python3"
+    echo "  Dependencies installed (venv)."
 fi
-echo "  Dependencies installed."
 
 # Step 3: Register MCP server
 echo ""
 if command -v claude &> /dev/null; then
     echo "  Registering MCP server..."
-    claude mcp add fishing-frenzy -- python3 "$SERVER_PATH" 2>/dev/null && \
+    claude mcp add fishing-frenzy -- "$PYTHON_CMD" "$SERVER_PATH" 2>/dev/null && \
         echo "  MCP server registered." || \
-        echo "  MCP server already registered (or run manually: claude mcp add fishing-frenzy -- python3 $SERVER_PATH)"
+        echo "  MCP server already registered (or run manually: claude mcp add fishing-frenzy -- $PYTHON_CMD $SERVER_PATH)"
 else
     echo "  WARNING: 'claude' CLI not found in PATH."
     echo "  Register the MCP server manually:"
     echo ""
-    echo "    claude mcp add fishing-frenzy -- python3 $SERVER_PATH"
+    echo "    claude mcp add fishing-frenzy -- $PYTHON_CMD $SERVER_PATH"
     echo ""
 fi
 
