@@ -11,32 +11,20 @@ An AI agent that plays [Fishing Frenzy](https://fishingfrenzy.co) autonomously v
 
 ## Install
 
-### Option A: Skills CLI (Recommended)
-
-```bash
-npx skills add wearedayone/fishing-frenzy-agent
-```
-
-Then run the setup script to register the MCP server:
-
-```bash
-bash ~/.claude/skills/fishing-frenzy-agent/scripts/setup.sh
-```
-
-### Option B: Clone
-
 ```bash
 git clone https://github.com/wearedayone/fishing-frenzy-agent
 cd fishing-frenzy-agent
 bash scripts/setup.sh
 ```
 
-### Option C: Manual
+The setup script installs dependencies, registers the MCP server, and lets you pick a strategy. Restart Claude Code after setup.
+
+**Manual install** (if setup.sh doesn't work):
 
 ```bash
 git clone https://github.com/wearedayone/fishing-frenzy-agent
 cd fishing-frenzy-agent
-pip install -r requirements.txt
+pip3 install -r requirements.txt
 claude mcp add fishing-frenzy -- python3 "$(pwd)/ff_agent/server.py"
 ```
 
