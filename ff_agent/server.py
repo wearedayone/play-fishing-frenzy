@@ -113,21 +113,35 @@ def fish_batch(range_type: str = "short_range", count: int = 5,
     try:
         token = ff_auth.get_token()
         result = fishing_client.fish_batch(token, range_type, count, multiplier=multiplier)
+        # Build per-cast results for cast-by-cast display
+        casts = []
+        for r in result.get("results", []):
+            cast = {
+                "success": r.get("success", False),
+                "range": r.get("range", range_type),
+            }
+            if r.get("success"):
+                fish = r.get("fish", {})
+                cast["fish_name"] = fish.get("name", "Unknown")
+                cast["quality"] = fish.get("quality", 0)
+                cast["xp"] = fish.get("xp_gain", 0)
+                cast["gold"] = fish.get("sell_price", 0)
+                cast["new_unlocks"] = r.get("new_unlocks", [])
+                player = r.get("player", {})
+                cast["level"] = player.get("level")
+                cast["energy"] = player.get("energy_remaining")
+            else:
+                cast["error"] = r.get("error", "Unknown error")
+            casts.append(cast)
+
         summary = {
             "total_casts": result["total_casts"],
             "successes": result["successes"],
             "failures": result["failures"],
             "total_xp": result["total_xp"],
             "total_gold_value": result["total_gold_value"],
+            "casts": casts,
         }
-        if result["results"]:
-            last = result["results"][-1]
-            summary["last_result"] = {
-                "success": last.get("success"),
-                "error": last.get("error"),
-                "fish": last.get("fish"),
-                "player": last.get("player"),
-            }
         return json.dumps(summary, indent=2)
     except Exception as e:
         return json.dumps({"error": str(e)})
@@ -516,6 +530,94 @@ def get_diving_jackpots() -> str:
     try:
         result = api.get_diving_jackpots()
         return json.dumps(result, indent=2)
+    except Exception as e:
+        return json.dumps({"error": str(e)})
+
+
+# ============================================================
+# Chests
+# ============================================================
+
+@server.tool()
+def get_chests() -> str:
+    """Get all chests in your inventory with types and quantities."""
+    try:
+        result = api.get_inventory_chests()
+        return json.dumps(result, indent=2)
+    except Exception as e:
+        return json.dumps({"error": str(e)})
+
+
+@server.tool()
+def open_chests(chest_ids: list[str] = None) -> str:
+    """Open chests from inventory. Opens all non-NFT chests if no IDs specified.
+
+    Args:
+        chest_ids: Optional list of specific chest IDs to open.
+                   If empty/None, fetches inventory and opens all available chests."""
+    try:
+        if not chest_ids:
+            # Fetch all chests and open them
+            inv = api.get_inventory_chests()
+            if isinstance(inv, list):
+                chest_ids = [c.get("_id") or c.get("id") for c in inv if c.get("_id") or c.get("id")]
+            elif isinstance(inv, dict):
+                chests = inv.get("chests", inv.get("data", []))
+                if isinstance(chests, list):
+                    chest_ids = [c.get("_id") or c.get("id") for c in chests if c.get("_id") or c.get("id")]
+
+        if not chest_ids:
+            return json.dumps({"message": "No chests to open"})
+
+        if len(chest_ids) == 1:
+            result = api.open_chest(chest_ids[0])
+        else:
+            result = api.open_chests_batch(chest_ids)
+        return json.dumps(result, indent=2)
+    except Exception as e:
+        return json.dumps({"error": str(e)})
+
+
+# ============================================================
+# Session & Heartbeat
+# ============================================================
+
+@server.tool()
+def start_play_session(strategy: str = "balanced") -> str:
+    """Start a tracked play session. Call at the beginning of /play.
+
+    Args:
+        strategy: The strategy being used ("balanced", "grind", "efficiency").
+
+    Returns the session ID for tracking."""
+    try:
+        session_id = state.start_session(strategy)
+        return json.dumps({"session_id": session_id, "strategy": strategy, "status": "started"})
+    except Exception as e:
+        return json.dumps({"error": str(e)})
+
+
+@server.tool()
+def end_play_session(session_id: int, fish_caught: int = 0,
+                     gold_earned: float = 0, xp_earned: int = 0,
+                     energy_spent: int = 0) -> str:
+    """End a tracked play session and record final stats.
+
+    Args:
+        session_id: From start_play_session.
+        fish_caught: Total fish caught this session.
+        gold_earned: Total gold earned this session.
+        xp_earned: Total XP earned this session.
+        energy_spent: Total energy spent this session."""
+    try:
+        state.update_session(session_id, fish_caught, gold_earned, xp_earned, energy_spent)
+        state.end_session(session_id)
+        lifetime = state.get_lifetime_stats()
+        return json.dumps({
+            "session_id": session_id,
+            "status": "ended",
+            "lifetime": lifetime,
+        }, indent=2)
     except Exception as e:
         return json.dumps({"error": str(e)})
 

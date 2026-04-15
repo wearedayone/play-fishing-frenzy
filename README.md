@@ -1,5 +1,10 @@
 # Fishing Frenzy Agent
 
+[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Tools](https://img.shields.io/badge/MCP_tools-36-purple.svg)](#what-the-agent-can-do)
+[![Fishing Frenzy](https://img.shields.io/badge/game-Fishing_Frenzy-orange.svg)](https://fishingfrenzy.co)
+
 An AI agent that plays [Fishing Frenzy](https://fishingfrenzy.co) autonomously via Claude Code. Install the skill, run `/play`, and your agent handles fishing, selling, cooking, quests, diving, and equipment management.
 
 **The meta-game**: Customize the strategy in `SKILL.md` to optimize your agent's decision-making. Same tools, different strategies.
@@ -74,6 +79,44 @@ Choose a strategy:
 | Stats | `get_leaderboard`, `get_session_stats` | Rankings, performance tracking |
 
 32 tools total across all game systems.
+
+## Demo
+
+When you run `/play`, your agent displays a live game dashboard:
+
+```
+╔══════════════════════════════════════════════════╗
+║  🎣 FISHING FRENZY AGENT                        ║
+║  Strategy: BALANCED                              ║
+╠══════════════════════════════════════════════════╣
+║  👤 FishBot_0x3e1C  ·  Lv.25                    ║
+║  ⚡ Energy: 22/30    ██████████████░░░░░ 73%     ║
+║  💰 Gold: 1,075     🏆 XP: 12,450               ║
+╚══════════════════════════════════════════════════╝
+
+🎣 Cast #1  long_range ─── 🐟 Epic Tuna ★★★★ (+15 XP, 45g)
+🎣 Cast #2  long_range ─── 🐟 Red Snapper ★★ (+8 XP, 22g)
+🎣 Cast #3  long_range ─── ❌ Fish escaped!
+🎣 Cast #4  mid_range  ─── 🐟 Golden Koi ★★★★★ (+25 XP, 80g)  🆕 NEW FISH!
+🎣 Cast #5  short_range ── 🐟 Common Sardine ★ (+3 XP, 5g)
+
+📦 SELL   Sold all fish → +238 gold (total: 1,313)
+✅ QUEST  "Catch 5 fish" complete → +100 gold, +50 XP
+🛒 SHOP   Bought 1× Sushi (-500g) → ⚡ +5 energy
+⬆️ UPGRADE Rod Handle Lv.0 → Lv.1 (1.25% energy save chance)
+
+╔══════════════════════════════════════════════════╗
+║  📊 SESSION COMPLETE                             ║
+╠══════════════════════════════════════════════════╣
+║  🐟 Fish Caught:  47         ⏱️  Duration: ~8m   ║
+║  💰 Gold Earned:  2,340      💰 Gold Now: 3,415  ║
+║  ⭐ XP Earned:    890        📈 Level: 25 → 27   ║
+║  ⚡ Energy Used:  30/30      🍣 Sushi Used: 2    ║
+╠══════════════════════════════════════════════════╣
+║  🏆 Best Catch: Golden Koi ★★★★★ (80g)          ║
+║  📊 Efficiency: 78g/energy                       ║
+╚══════════════════════════════════════════════════╝
+```
 
 ## How It Works
 

@@ -236,6 +236,23 @@ def reset_upgrade_points() -> dict:
     return _request("POST", "/accessories/reset-available-upgrade-point")
 
 
+# --- Chests ---
+
+def get_inventory_chests() -> dict:
+    """Get all chests in inventory."""
+    return _request("GET", "/inventory/chests")
+
+
+def open_chest(chest_id: str) -> dict:
+    """Open a single non-NFT chest."""
+    return _request("GET", f"/chests/{chest_id}/open")
+
+
+def open_chests_batch(chest_ids: list) -> dict:
+    """Open multiple non-NFT chests at once."""
+    return _request("POST", "/chests/open-batch", json={"chests": chest_ids})
+
+
 # --- Leaderboard ---
 
 def get_leaderboard(rank_type: str = "General") -> dict:

@@ -112,19 +112,22 @@ Track throughout: fish caught, gold earned, XP earned, energy spent, sushi bough
 
 ```
 1.  LOGIN       — login()
-2.  PROFILE     — get_profile(), display dashboard
-3.  DAILY       — claim_daily_reward()
-4.  PETS        — collect_pet_fish()
-5.  QUESTS      — get_quests(), claim completed
-6.  ACCESSORIES — get_accessories(), spend upgrade points
-7.  FISH        — fish_batch() until energy depleted
-8.  SELL        — sell_all_fish()
-9.  COOK        — cook if recipe fish available
-10. WHEELS      — spin_daily_wheel(), spin_cooking_wheel()
-11. SUSHI       — buy + use if gold threshold met, then fish more
-12. DIVE        — if level >= 30 and gold >= 2500
-13. REPORT      — display session summary
+2.  SESSION     — start_play_session(strategy) to begin tracking
+3.  PROFILE     — get_profile(), display dashboard
+4.  DAILY       — claim_daily_reward()
+5.  PETS        — collect_pet_fish()
+6.  QUESTS      — get_quests(), claim completed
+7.  ACCESSORIES — get_accessories(), spend upgrade points
+8.  FISH        — fish_batch() until energy depleted
+9.  SELL        — sell_all_fish()
+10. COOK        — cook if recipe fish available
+11. WHEELS      — spin_daily_wheel(), spin_cooking_wheel()
+12. SUSHI       — buy + use if gold threshold met, then fish more
+13. DIVE        — if level >= 30 and gold >= 2500
+14. END         — end_play_session(session_id, stats) + display session summary
 ```
+
+**Important**: Call `start_play_session()` at the beginning and `end_play_session()` at the end to track lifetime stats.
 
 ## Strategy Templates
 
