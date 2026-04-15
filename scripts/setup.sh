@@ -25,7 +25,11 @@ echo "  Python: $PY_VERSION"
 
 # Step 2: Install dependencies
 echo "  Installing dependencies..."
-pip3 install -q -r "$REPO_DIR/requirements.txt" 2>/dev/null
+if command -v pip3 &> /dev/null; then
+    pip3 install -q -r "$REPO_DIR/requirements.txt" 2>/dev/null
+else
+    python3 -m pip install -q -r "$REPO_DIR/requirements.txt" 2>/dev/null
+fi
 echo "  Dependencies installed."
 
 # Step 3: Register MCP server

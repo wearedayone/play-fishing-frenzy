@@ -16,12 +16,21 @@ An AI agent that plays [Fishing Frenzy](https://fishingfrenzy.co) autonomously i
 ## Install (1 minute)
 
 ```bash
+npx skills add wearedayone/fishing-frenzy-agent --all --global -y
+bash ~/.claude/skills/play/scripts/setup.sh
+```
+
+Restart Claude Code. That's it.
+
+<details>
+<summary>Alternative: clone manually</summary>
+
+```bash
 git clone https://github.com/wearedayone/fishing-frenzy-agent
 cd fishing-frenzy-agent
 bash scripts/setup.sh
 ```
-
-Restart Claude Code if it was already open. That's it.
+</details>
 
 ---
 
@@ -117,8 +126,8 @@ Edit **`SKILL.md`** to change the agent's decision-making logic itself.
 
 **"Tool not found" or MCP errors:**
 ```bash
-# Re-run setup from the repo directory
-cd fishing-frenzy-agent && bash scripts/setup.sh
+# Re-run setup to re-register the MCP server
+bash ~/.claude/skills/play/scripts/setup.sh
 # Then restart Claude Code
 ```
 
