@@ -76,16 +76,16 @@ STRATEGY_DEFAULTS: dict[str, StrategyConfig] = {
         dive_risk="moderate",
         upgrade_order="auto",
     ),
-    "efficiency": StrategyConfig(
-        strategy="efficiency",
-        sushi_buy_threshold=2000,
-        gold_reserve=1000,
+    "risk": StrategyConfig(
+        strategy="risk",
+        sushi_buy_threshold=1000,
+        gold_reserve=500,
         diving_gold_threshold=2500,
         fishing_strategy="auto",
         fish_disposal="sell_all",
-        max_sushi_per_session=2,
-        cook_before_sell=True,
-        dive_risk="conservative",
+        max_sushi_per_session=3,
+        cook_before_sell=False,
+        dive_risk="aggressive",
         upgrade_order="auto",
     ),
 }
@@ -100,9 +100,9 @@ UPGRADE_PRIORITIES: dict[str, list[str]] = {
         "Rod Handle", "Icebox", "Reel",
         "Fishing Manual", "Cutting Board", "Lucky Charm",
     ],
-    "efficiency": [
-        "Icebox", "Rod Handle", "Cutting Board",
-        "Reel", "Fishing Manual", "Lucky Charm",
+    "risk": [
+        "Reel", "Lucky Charm", "Icebox",
+        "Rod Handle", "Cutting Board", "Fishing Manual",
     ],
 }
 
@@ -157,7 +157,7 @@ def get_fishing_range(state: GameState, config: StrategyConfig) -> str:
         strategy_range_map = {
             "grind": "short",
             "balanced": "medium",
-            "efficiency": "long",
+            "risk": "long",
         }
         desired = strategy_range_map.get(config.strategy, "short")
 

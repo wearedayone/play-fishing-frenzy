@@ -952,7 +952,7 @@ def start_play_session(strategy: str = "balanced") -> str:
     """Start a tracked play session. Call at the beginning of /play.
 
     Args:
-        strategy: The strategy being used ("balanced", "grind", "efficiency").
+        strategy: The strategy being used ("balanced", "grind", "risk").
 
     Returns the session ID for tracking."""
     try:

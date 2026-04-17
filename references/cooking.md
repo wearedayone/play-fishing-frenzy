@@ -47,7 +47,7 @@ Special considerations:
 
 - **Only way to spend pearls** — save them or spin, no other option
 - Rewards include xFISH tokens
-- The Efficiency strategy prioritizes spinning the cooking wheel
+- The Balanced strategy prioritizes spinning the cooking wheel
 - Decision: spin immediately vs save for potential future pearl uses (currently none exist)
 
 ## Workflow

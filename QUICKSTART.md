@@ -2,7 +2,7 @@
 
 ## What This Is
 
-An AI agent that plays [Fishing Frenzy](https://fishingfrenzy.co) autonomously inside Claude Code. You type `/play`, and it creates a wallet, catches fish, sells them, buys sushi, completes quests, and levels up — all on its own.
+An AI agent that plays [Fishing Frenzy](https://fishingfrenzy.co) autonomously inside Claude Code. You type `/play-fishing-frenzy`, and it creates a wallet, catches fish, sells them, buys sushi, completes quests, and levels up — all on its own.
 
 ---
 
@@ -17,7 +17,7 @@ An AI agent that plays [Fishing Frenzy](https://fishingfrenzy.co) autonomously i
 
 ```bash
 npx skills add wearedayone/fishing-frenzy-agent --all --global -y
-bash ~/.claude/skills/play/scripts/setup.sh
+bash ~/.claude/skills/play-fishing-frenzy/scripts/setup.sh
 ```
 
 Restart Claude Code. That's it.
@@ -39,7 +39,7 @@ bash scripts/setup.sh
 Open Claude Code in any directory and type:
 
 ```
-/play
+/play-fishing-frenzy
 ```
 
 ### First Run
@@ -78,9 +78,9 @@ A session takes **5-10 minutes** (fishing cooldowns are ~10 seconds each).
 ### Strategies
 
 ```
-/play balanced    # Default — fish, sell, cook, quests, upgrades
-/play grind       # Max casts — short range, aggressive sushi buying
-/play efficiency  # Best gold/energy — long range, cooking focus
+/play-fishing-frenzy balanced    # Default — fish, sell, cook, quests, upgrades
+/play-fishing-frenzy grind       # Max casts — short range, aggressive sushi buying
+/play-fishing-frenzy risk        # High risk diving and NFT gameplay for rewards
 ```
 
 ---
@@ -104,12 +104,12 @@ Edit **`SKILL.md`** to change the agent's decision-making logic itself.
 
 | Area | How to Test | What to Look For |
 |------|------------|-----------------|
-| First run | `/play` on fresh install | Wallet created, account registered, fishing starts |
+| First run | `/play-fishing-frenzy` on fresh install | Wallet created, account registered, fishing starts |
 | Full loop | Let a session run to completion | Fish → sell → buy sushi → fish more → session summary |
-| Strategies | `/play grind` then `/play efficiency` | Different behavior (range, sushi timing, cooking) |
-| Error recovery | Interrupt mid-session, then `/play` again | Agent re-authenticates and starts a new session |
-| Config changes | Edit `CONFIG.md`, run `/play` | Agent respects new thresholds |
-| Daily rewards | Run `/play` on consecutive days | Daily reward claimed once per day |
+| Strategies | `/play-fishing-frenzy grind` then `/play-fishing-frenzy risk` | Different behavior (range, sushi timing, cooking) |
+| Error recovery | Interrupt mid-session, then `/play-fishing-frenzy` again | Agent re-authenticates and starts a new session |
+| Config changes | Edit `CONFIG.md`, run `/play-fishing-frenzy` | Agent respects new thresholds |
+| Daily rewards | Run `/play-fishing-frenzy` on consecutive days | Daily reward claimed once per day |
 
 ---
 
@@ -127,7 +127,7 @@ Edit **`SKILL.md`** to change the agent's decision-making logic itself.
 **"Tool not found" or MCP errors:**
 ```bash
 # Re-run setup to re-register the MCP server
-bash ~/.claude/skills/play/scripts/setup.sh
+bash ~/.claude/skills/play-fishing-frenzy/scripts/setup.sh
 # Then restart Claude Code
 ```
 

@@ -1,20 +1,26 @@
 ---
-name: play
-description: "Play Fishing Frenzy autonomously — fishing, cooking, quests, equipment, and economy optimization."
-user-invocable: true
-argument-hint: "[strategy: balanced|grind|efficiency]"
+name: play-fishing-frenzy
+description: "Play Fishing Frenzy autonomously — an AI agent that fishes, cooks, dives, completes quests, and optimizes your economy. Built on Ronin blockchain with full wallet, NFT, and token integration."
 allowed-tools: "mcp:fishing-frenzy"
-context:
-  - references/fishing.md
-  - references/economy.md
-  - references/cooking.md
-  - references/diving.md
-  - references/quests.md
-  - references/equipment.md
-  - references/collecting.md
-  - references/chests.md
-  - references/leaderboards.md
-  - references/token.md
+license: "MIT"
+metadata:
+  author: "Uncharted Games"
+  version: "1.0.0"
+  repository: "https://github.com/wearedayone/fishing-frenzy-agent"
+  tags: "game, web3, blockchain, fishing, autonomous-agent, ronin, nft"
+  user-invocable: true
+  argument-hint: "[strategy: balanced|grind|risk]"
+  context:
+    - references/fishing.md
+    - references/economy.md
+    - references/cooking.md
+    - references/diving.md
+    - references/quests.md
+    - references/equipment.md
+    - references/collecting.md
+    - references/chests.md
+    - references/leaderboards.md
+    - references/token.md
 ---
 
 # Fishing Frenzy Agent — Play Skill
@@ -160,13 +166,12 @@ Track throughout: fish caught, gold earned, XP earned, energy spent, sushi bough
 - Upgrades: Fishing Manual → Rod Handle → Reel → Icebox → Lucky Charm → Cutting Board
   (XP first to level faster, Rod Handle for free casts, Reel to reduce escapes)
 
-### Efficiency
+### Risk
 - Fishing: **Long** strategy (long_range + Big Bait) if bait available, otherwise **Medium** or **Short**
-- Fish disposal: Cook matching fish → collect fish near aquarium milestones → sell remainder
-- Buy sushi at gold > 2000
-- Prioritize cooking wheel for xFISH
-- Dive when affordable
-- Upgrades: Icebox → Rod Handle → Cutting Board → Reel → Fishing Manual → Lucky Charm
-  (Gold bonus first since selling is the main income, Cutting Board to stretch bait)
+- Fish disposal: Sell all immediately (skip cooking — focus on gold for diving)
+- Buy sushi at gold > 1000
+- Aggressive diving — push deep for maximum rewards
+- Upgrades: Reel → Lucky Charm → Icebox → Rod Handle → Cutting Board → Fishing Manual
+  (Reel for catching rarer fish, Lucky Charm for random drops, Icebox for gold on sells)
 
-If the user specified a strategy argument (e.g. `/play grind`), use that. Otherwise default to **balanced**.
+If the user specified a strategy argument (e.g. `/play-fishing-frenzy grind`), use that. Otherwise default to **balanced**.

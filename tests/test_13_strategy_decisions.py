@@ -49,10 +49,10 @@ class TestSushiDecision:
         state = GameState(gold=2600, energy=0)
         assert should_buy_sushi(state, config) is True
 
-    def test_efficiency_needs_3000_gold(self):
-        """Efficiency threshold is 2000+1000=3000."""
-        config = STRATEGY_DEFAULTS["efficiency"]
-        state = GameState(gold=2800, energy=0)
+    def test_risk_needs_1500_gold(self):
+        """Risk threshold is 1000+500=1500."""
+        config = STRATEGY_DEFAULTS["risk"]
+        state = GameState(gold=1400, energy=0)
         assert should_buy_sushi(state, config) is False
 
     def test_skips_when_energy_positive(self):
@@ -125,24 +125,24 @@ class TestFishingRange:
         state = GameState(has_bait_medium=False)
         assert get_fishing_range(state, config) == "short_range"
 
-    def test_efficiency_auto_with_big_bait(self):
-        config = STRATEGY_DEFAULTS["efficiency"]
+    def test_risk_auto_with_big_bait(self):
+        config = STRATEGY_DEFAULTS["risk"]
         state = GameState(has_bait_big=True)
         assert get_fishing_range(state, config) == "long_range"
 
-    def test_efficiency_no_big_bait_falls_to_medium(self):
-        config = STRATEGY_DEFAULTS["efficiency"]
+    def test_risk_no_big_bait_falls_to_medium(self):
+        config = STRATEGY_DEFAULTS["risk"]
         state = GameState(has_bait_big=False, has_bait_medium=True)
         assert get_fishing_range(state, config) == "mid_range"
 
-    def test_efficiency_no_bait_at_all_falls_to_short(self):
-        config = STRATEGY_DEFAULTS["efficiency"]
+    def test_risk_no_bait_at_all_falls_to_short(self):
+        config = STRATEGY_DEFAULTS["risk"]
         state = GameState(has_bait_big=False, has_bait_medium=False)
         assert get_fishing_range(state, config) == "short_range"
 
     def test_explicit_short_override(self):
         """Config can override auto with explicit range."""
-        config = StrategyConfig(strategy="efficiency", fishing_strategy="short")
+        config = StrategyConfig(strategy="risk", fishing_strategy="short")
         state = GameState(has_bait_big=True)
         assert get_fishing_range(state, config) == "short_range"
 
@@ -206,11 +206,11 @@ class TestUpgradePriority:
         maxes = {k: 10 for k in levels}
         assert get_next_upgrade(config, levels, maxes) == "Rod Handle"
 
-    def test_efficiency_first_upgrade_is_icebox(self):
-        config = STRATEGY_DEFAULTS["efficiency"]
-        levels = {k: 0 for k in UPGRADE_PRIORITIES["efficiency"]}
+    def test_risk_first_upgrade_is_reel(self):
+        config = STRATEGY_DEFAULTS["risk"]
+        levels = {k: 0 for k in UPGRADE_PRIORITIES["risk"]}
         maxes = {k: 10 for k in levels}
-        assert get_next_upgrade(config, levels, maxes) == "Icebox"
+        assert get_next_upgrade(config, levels, maxes) == "Reel"
 
     def test_skips_maxed_accessory(self):
         config = STRATEGY_DEFAULTS["grind"]

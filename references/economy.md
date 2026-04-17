@@ -36,7 +36,7 @@ The thresholds in CONFIG.md are gold reserves to prevent the agent from bankrupt
 |----------|--------------|---------|
 | Balanced | gold > 1500 | Keep 1000 |
 | Grind | gold > 800 | Keep 300 |
-| Efficiency | gold > 2000 | Keep 1500 |
+| Risk | gold > 1000 | Keep 500 |
 
 ## Gold Management
 

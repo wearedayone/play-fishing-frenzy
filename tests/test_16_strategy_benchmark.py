@@ -88,7 +88,7 @@ class TestStrategyBenchmark:
     def _run_simulations(self):
         self.grind = simulate_session("grind")
         self.balanced = simulate_session("balanced")
-        self.efficiency = simulate_session("efficiency")
+        self.risk = simulate_session("risk")
 
     def test_grind_uses_short_range(self):
         """Grind always uses short_range."""
@@ -98,26 +98,26 @@ class TestStrategyBenchmark:
         """Balanced uses mid_range (when bait available)."""
         assert all(r == "mid_range" for r in self.balanced["fishing_ranges"])
 
-    def test_efficiency_uses_long_range(self):
-        """Efficiency uses long_range (when bait available)."""
-        assert all(r == "long_range" for r in self.efficiency["fishing_ranges"])
+    def test_risk_uses_long_range(self):
+        """Risk uses long_range (when bait available)."""
+        assert all(r == "long_range" for r in self.risk["fishing_ranges"])
 
-    def test_grind_casts_more_than_efficiency(self):
-        """Grind (1 energy/cast) makes more casts than efficiency (3 energy/cast)."""
-        assert self.grind["casts"] > self.efficiency["casts"]
+    def test_grind_casts_more_than_risk(self):
+        """Grind (1 energy/cast) makes more casts than risk (3 energy/cast)."""
+        assert self.grind["casts"] > self.risk["casts"]
 
     def test_different_first_upgrades(self):
         """Each strategy has a different first upgrade priority."""
         upgrades = {
             self.grind["first_upgrade"],
             self.balanced["first_upgrade"],
-            self.efficiency["first_upgrade"],
+            self.risk["first_upgrade"],
         }
         assert len(upgrades) == 3, (
             f"Expected 3 different upgrades, got: "
             f"grind={self.grind['first_upgrade']}, "
             f"balanced={self.balanced['first_upgrade']}, "
-            f"efficiency={self.efficiency['first_upgrade']}"
+            f"risk={self.risk['first_upgrade']}"
         )
 
     def test_grind_skips_cooking(self):
@@ -125,7 +125,8 @@ class TestStrategyBenchmark:
         assert Action.COOK not in self.grind["disposal_actions"]
         assert Action.SELL in self.grind["disposal_actions"]
 
-    def test_balanced_and_efficiency_cook(self):
-        """Balanced and efficiency both cook when recipe matches."""
+    def test_balanced_cooks_risk_skips(self):
+        """Balanced cooks when recipe matches; risk skips cooking (sells all)."""
         assert Action.COOK in self.balanced["disposal_actions"]
-        assert Action.COOK in self.efficiency["disposal_actions"]
+        assert Action.COOK not in self.risk["disposal_actions"]
+        assert Action.SELL in self.risk["disposal_actions"]

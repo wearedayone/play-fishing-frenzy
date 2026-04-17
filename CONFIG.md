@@ -8,8 +8,8 @@ Edit these values to customize your agent's behavior. The agent reads this file 
 STRATEGY: balanced
 ```
 
-Options: `balanced`, `grind`, `efficiency`
-(Can also be set per-session via `/play grind`)
+Options: `balanced`, `grind`, `risk`
+(Can also be set per-session via `/play-fishing-frenzy grind`)
 
 ## Economy Thresholds
 
@@ -33,7 +33,7 @@ USE_MULTIPLIER: false
 ```
 
 - `FISHING_STRATEGY`: Which range/bait pairing to use
-  - `auto` — determined by the active strategy (Grind=Short, Balanced=Medium, Efficiency=Long)
+  - `auto` — determined by the active strategy (Grind=Short, Balanced=Medium, Risk=Long)
   - `short` — short_range, no bait (1 energy/cast, max volume)
   - `medium` — mid_range + Medium Bait (2 energy/cast, epic-weighted drops)
   - `long` — long_range + Big Bait (3 energy/cast, legendary-weighted drops)
@@ -42,7 +42,7 @@ USE_MULTIPLIER: false
   - `sell_all` — sell all remaining fish (default)
   - `hold` — keep fish in inventory, do not sell (for manual decisions)
   - Note: cooking always happens first (if `COOK_BEFORE_SELL=true`). Collecting for aquarium
-    milestones is handled automatically in Efficiency strategy. Fish disposal order:
+    milestones is handled automatically. Fish disposal order:
     Cook (recipe matches) → Collect (near milestones) → Sell or Hold (remainder)
 - `MAX_SUSHI_PER_SESSION`: Cap on sushi purchases per session (0 = unlimited)
 - `USE_MULTIPLIER`: Set to `true` to enable 5x multiplier when energy is high

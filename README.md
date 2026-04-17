@@ -5,7 +5,9 @@
 [![Tools](https://img.shields.io/badge/MCP_tools-36-purple.svg)](#what-the-agent-can-do)
 [![Fishing Frenzy](https://img.shields.io/badge/game-Fishing_Frenzy-orange.svg)](https://fishingfrenzy.co)
 
-An AI agent that plays [Fishing Frenzy](https://fishingfrenzy.co) autonomously. Works with any AI tool that supports [MCP](https://modelcontextprotocol.io) — Claude Code, Cursor, Cline, Windsurf, OpenClaw, and more. Install, run `/play`, and your agent handles fishing, selling, cooking, quests, diving, and equipment management.
+> An autonomous AI agent that plays [Fishing Frenzy](https://fishingfrenzy.co) — fishing, cooking, diving, quests, and economy optimization on the Ronin blockchain.
+
+Works with any AI tool that supports [MCP](https://modelcontextprotocol.io) — Claude Code, Cursor, Cline, Windsurf, OpenClaw, and more. Install, run `/play-fishing-frenzy`, and your agent handles fishing, selling, cooking, quests, diving, and equipment management.
 
 **The meta-game**: Customize the strategy in `SKILL.md` to optimize your agent's decision-making. Same tools, different strategies.
 
@@ -15,7 +17,7 @@ An AI agent that plays [Fishing Frenzy](https://fishingfrenzy.co) autonomously. 
 
 ```bash
 npx skills add wearedayone/fishing-frenzy-agent --all --global -y
-pip3 install -r ~/.agents/skills/play/requirements.txt
+pip3 install -r ~/.agents/skills/play-fishing-frenzy/requirements.txt
 ```
 
 This installs the skill to every detected AI agent (Claude Code, Cursor, Cline, etc.) and installs Python dependencies.
@@ -37,13 +39,13 @@ The agent uses an MCP server that exposes 36 game tools. Register it with your A
 #### Claude Code
 
 ```bash
-claude mcp add fishing-frenzy -- python3 ~/.agents/skills/play/ff_agent/server.py
+claude mcp add fishing-frenzy -- python3 ~/.agents/skills/play-fishing-frenzy/ff_agent/server.py
 ```
 
 Or run the setup script (does the above + lets you pick a strategy):
 
 ```bash
-bash ~/.claude/skills/play/scripts/setup.sh
+bash ~/.claude/skills/play-fishing-frenzy/scripts/setup.sh
 ```
 
 #### Cursor
@@ -54,7 +56,7 @@ Go to **Cursor Settings > MCP** and add:
 {
   "fishing-frenzy": {
     "command": "python3",
-    "args": ["~/.agents/skills/play/ff_agent/server.py"]
+    "args": ["~/.agents/skills/play-fishing-frenzy/ff_agent/server.py"]
   }
 }
 ```
@@ -68,7 +70,7 @@ Add to your MCP settings (`.cline/mcp_settings.json`):
   "mcpServers": {
     "fishing-frenzy": {
       "command": "python3",
-      "args": ["~/.agents/skills/play/ff_agent/server.py"]
+      "args": ["~/.agents/skills/play-fishing-frenzy/ff_agent/server.py"]
     }
   }
 }
@@ -82,7 +84,7 @@ Add to your MCP config in Windsurf settings:
 {
   "fishing-frenzy": {
     "command": "python3",
-    "args": ["~/.agents/skills/play/ff_agent/server.py"]
+    "args": ["~/.agents/skills/play-fishing-frenzy/ff_agent/server.py"]
   }
 }
 ```
@@ -90,23 +92,23 @@ Add to your MCP config in Windsurf settings:
 #### OpenClaw
 
 ```bash
-openclaw mcp set fishing-frenzy '{"command":"python3","args":["~/.agents/skills/play/ff_agent/server.py"]}'
+openclaw mcp set fishing-frenzy '{"command":"python3","args":["~/.agents/skills/play-fishing-frenzy/ff_agent/server.py"]}'
 ```
 
 #### Any other MCP-compatible tool
 
-Point it at the server: `python3 ~/.agents/skills/play/ff_agent/server.py` (stdio transport).
+Point it at the server: `python3 ~/.agents/skills/play-fishing-frenzy/ff_agent/server.py` (stdio transport).
 
 ---
 
-Restart your tool after registering. If you cloned instead of using `npx skills`, replace `~/.agents/skills/play/` with your clone path.
+Restart your tool after registering. If you cloned instead of using `npx skills`, replace `~/.agents/skills/play-fishing-frenzy/` with your clone path.
 
 ## Play
 
 Open your AI tool and type:
 
 ```
-/play
+/play-fishing-frenzy
 ```
 
 Your agent will:
@@ -121,9 +123,9 @@ Your agent will:
 Choose a strategy:
 
 ```
-/play grind       # Max XP, aggressive sushi buying
-/play efficiency  # Best gold/energy ratio, strategic cooking
-/play balanced    # Default — even split across all activities
+/play-fishing-frenzy grind       # Max XP, aggressive sushi buying
+/play-fishing-frenzy risk        # High risk diving and NFT gameplay for rewards
+/play-fishing-frenzy balanced    # Default — even split across all activities
 ```
 
 ## What the Agent Can Do
@@ -143,7 +145,7 @@ Choose a strategy:
 
 ## Demo
 
-When you run `/play`, your agent displays a live game dashboard:
+When you run `/play-fishing-frenzy`, your agent displays a live game dashboard:
 
 ```
 ╔══════════════════════════════════════════════════╗
@@ -213,7 +215,7 @@ Edit `SKILL.md` to change your agent's behavior:
 - Set energy management rules
 - Change accessory upgrade priority
 
-The three built-in strategies (balanced, grind, efficiency) are starting points. Create your own by modifying the decision rules.
+The three built-in strategies (balanced, grind, risk) are starting points. Create your own by modifying the decision rules.
 
 ## Data Storage
 
@@ -226,6 +228,37 @@ All data is stored locally at `~/.fishing-frenzy-agent/`:
 
 - Python 3.10+
 - Any MCP-compatible AI tool ([Claude Code](https://docs.anthropic.com/en/docs/claude-code/overview), [Cursor](https://cursor.com), [Cline](https://cline.bot), [Windsurf](https://windsurf.com), [OpenClaw](https://github.com/openclaw/openclaw), etc.)
+
+## For Developers
+
+This repo is also a reference implementation for building autonomous game agents with MCP.
+
+### Architecture
+
+```
+SKILL.md (strategy layer)
+    ↓ reads
+AI Agent (Claude, Cursor, etc.)
+    ↓ calls
+MCP Server (ff_agent/server.py) — 36 tools via stdio
+    ↓ wraps
+API Client + Fishing Client + Diving Client
+    ↓ talks to
+Fishing Frenzy API + Ronin Blockchain (SIWE auth, wallet ops)
+```
+
+### Extending Strategies
+
+1. Edit the strategy templates in `SKILL.md` or add new ones
+2. Adjust thresholds in `CONFIG.md`
+3. The MCP tools stay the same — strategy is pure prompt engineering
+
+### Tests
+
+```bash
+python3 -m pytest tests/ --skip-live -v    # Offline suite (no API calls)
+python3 -m pytest tests/ -v                # Full suite (needs live connection)
+```
 
 ## License
 

@@ -67,13 +67,13 @@ else
     echo ""
     echo "    1) balanced    — Even split: fish, cook, quests (recommended)"
     echo "    2) grind       — Max XP, aggressive sushi, short range"
-    echo "    3) efficiency  — Best gold/energy, long range, cooking focus"
+    echo "    3) risk        — High risk diving, long range, NFT gameplay"
     echo ""
     read -p "  Strategy [1/2/3, default=1]: " STRATEGY_CHOICE
 
     case "$STRATEGY_CHOICE" in
         2) STRATEGY="grind" ;;
-        3) STRATEGY="efficiency" ;;
+        3) STRATEGY="risk" ;;
         *) STRATEGY="balanced" ;;
     esac
 

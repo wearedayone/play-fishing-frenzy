@@ -29,7 +29,7 @@ class TestParseConfig:
         """Reads the real CONFIG.md and returns a valid StrategyConfig."""
         from ff_agent.server import _parse_config
         config = _parse_config()
-        assert config.strategy in ("balanced", "grind", "efficiency")
+        assert config.strategy in ("balanced", "grind", "risk")
         assert config.sushi_buy_threshold > 0
         assert config.gold_reserve >= 0
 
@@ -275,9 +275,9 @@ class TestSetupPreferencesConfig:
             content = config_copy.read_text()
             assert "STRATEGY: grind" in content
 
-            setup_preferences.update_config("STRATEGY", "efficiency")
+            setup_preferences.update_config("STRATEGY", "risk")
             content = config_copy.read_text()
-            assert "STRATEGY: efficiency" in content
+            assert "STRATEGY: risk" in content
         finally:
             setup_preferences.CONFIG_PATH = original_path
 

@@ -1,3 +1,16 @@
+[project]
+name = "play-fishing-frenzy"
+version = "1.0.0"
+description = "Autonomous AI agent for Fishing Frenzy — fish, cook, dive, and optimize on Ronin blockchain"
+license = "MIT"
+requires-python = ">=3.10"
+authors = [{ name = "Uncharted Games" }]
+keywords = ["fishing-frenzy", "web3", "game-agent", "ronin", "mcp", "claude-code"]
+
+[project.urls]
+Homepage = "https://fishingfrenzy.co"
+Repository = "https://github.com/wearedayone/fishing-frenzy-agent"
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 markers = [
