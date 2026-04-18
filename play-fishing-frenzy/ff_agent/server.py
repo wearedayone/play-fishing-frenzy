@@ -522,9 +522,25 @@ def verify_social_quest(quest_id: str) -> str:
 
 @server.tool()
 def spin_daily_wheel() -> str:
-    """Spin the daily quest reward wheel (if eligible)."""
+    """Spin the daily quest reward wheel (if eligible).
+    This is the FREE wheel. For the karma/token wheel (xFISH rewards),
+    use spin_karma_wheel() instead."""
     try:
         result = api.spin_daily_wheel()
+        return json.dumps(result, indent=2)
+    except Exception as e:
+        return json.dumps(_tool_error(e))
+
+
+@server.tool()
+def spin_karma_wheel() -> str:
+    """Spin the karma/token wheel for xFISH rewards.
+
+    Requires karma >= 120,000 AND 2,000+ daily quest points.
+    Costs a small RON fee (~0.12 RON) for VRF randomness.
+    Can only be spun once per day (resets at 2 AM UTC)."""
+    try:
+        result = chain.spin_token_wheel()
         return json.dumps(result, indent=2)
     except Exception as e:
         return json.dumps(_tool_error(e))

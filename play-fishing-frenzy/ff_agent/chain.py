@@ -23,6 +23,8 @@ CONTRACTS = {
     "fish_nft":      "0x4079da822E8972982b8569e38cdF719A21069934",
     "rod_nft":       "0x77CE5148b7ad284e431175Ad7258B54A64816da6",
     "usdc":          "0x0b7007c13325c48911f73a2dad5fa5dcbf808adc",
+    "spin_wheel":    "0x02F3b724408EE1ba36A279526c213846b7339501",
+    "vrf_coordinator": "0x16a62a921e7fec5bf867ff5c805b662db757b778",
 }
 
 # Minimal ABIs — only the functions we call
@@ -296,6 +298,94 @@ def daily_checkin() -> dict:
         "success": True,
         "tx_hash": tx_hash,
         "cost_ron": float(w3.from_wei(price, "ether")),
+    }
+
+
+# ============================================================
+# Token Wheel Spin (Karma Wheel)
+# ============================================================
+
+SPIN_WHEEL_ABI = [
+    {"inputs": [{"name": "callbackGasLimit", "type": "uint256"},
+                {"name": "gasPriceToFulfill", "type": "uint256"}],
+     "name": "spin", "outputs": [], "stateMutability": "payable", "type": "function"},
+]
+
+VRF_COORDINATOR_ABI = [
+    {"inputs": [{"name": "callbackGasLimit", "type": "uint256"},
+                {"name": "gasPrice", "type": "uint256"}],
+     "name": "estimateRequestRandomFee",
+     "outputs": [{"type": "uint256"}],
+     "stateMutability": "view", "type": "function"},
+]
+
+
+def spin_token_wheel() -> dict:
+    """Spin the karma/token wheel on-chain, then validate with the API.
+
+    Requires karma >= 120,000 and 2,000+ daily quest points.
+    Costs a small RON fee for VRF randomness.
+
+    Returns:
+        {"success": True, "tx_hash": "0x...", "cost_ron": 0.12,
+         "api_result": {...}}
+    """
+    w3 = _get_w3()
+    wallet, _ = _get_wallet_and_account()
+
+    # Step 1: Calculate VRF fee
+    block = w3.eth.get_block("latest")
+    base_fee = block.get("baseFeePerGas", w3.eth.gas_price)
+    gas_price_to_fulfill = base_fee * 2 + w3.to_wei(20, "gwei")
+    callback_gas_limit = 300000
+
+    vrf = w3.eth.contract(
+        address=Web3.to_checksum_address(CONTRACTS["vrf_coordinator"]),
+        abi=VRF_COORDINATOR_ABI,
+    )
+    msg_value = vrf.functions.estimateRequestRandomFee(
+        callback_gas_limit, gas_price_to_fulfill
+    ).call()
+
+    # Step 2: Call spin() on the wheel contract
+    spin_contract = w3.eth.contract(
+        address=Web3.to_checksum_address(CONTRACTS["spin_wheel"]),
+        abi=SPIN_WHEEL_ABI,
+    )
+    tx = spin_contract.functions.spin(
+        callback_gas_limit, gas_price_to_fulfill
+    ).build_transaction({
+        "value": msg_value,
+        "from": wallet["address"],
+        "chainId": CHAIN_ID,
+        "nonce": w3.eth.get_transaction_count(wallet["address"]),
+        "gasPrice": w3.eth.gas_price,
+    })
+    tx_hash = _send_tx(w3, tx)
+    tx_hash_hex = f"0x{tx_hash}"
+
+    # Step 3: Submit to API for validation + reward
+    import httpx
+    from . import auth
+    headers = {
+        "Authorization": f"Bearer {auth.get_token()}",
+        "Content-Type": "application/json",
+        "Origin": "https://fishingfrenzy.co",
+        "Referer": "https://fishingfrenzy.co/",
+    }
+    with httpx.Client(timeout=15) as client:
+        resp = client.post(
+            f"{api.BASE_URL}/user-quests/daily-quest/wheel/spin",
+            headers=headers,
+            json={"wheelType": "Token", "transactionHash": tx_hash_hex},
+        )
+        api_result = resp.json()
+
+    return {
+        "success": resp.status_code == 200,
+        "tx_hash": tx_hash_hex,
+        "cost_ron": float(w3.from_wei(msg_value, "ether")),
+        "api_result": api_result,
     }
 
 

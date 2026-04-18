@@ -51,6 +51,7 @@ Gameplay → xFISH (non-tradeable)
 | `get_staking_recommendation(fish_target)` | Get dynamic RON deposit recommendation with live prices |
 | `buy_fish_tokens(ron_amount, slippage_pct)` | Swap RON → FISH on Katana DEX |
 | `setup_fish_staking(fish_amount, duration_months)` | One-click: buy FISH + approve + stake (full flow) |
+| `spin_karma_wheel()` | Spin karma/token wheel for xFISH (requires karma >= 120K + 2000 quest pts, costs ~0.12 RON) |
 
 **Not yet available:**
 - Convert xFISH → FISH (requires additional contract ABI discovery)

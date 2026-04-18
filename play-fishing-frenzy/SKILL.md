@@ -100,7 +100,7 @@ User says "Maybe later" → set `STAKING_SETUP: deferred`.
 After login, as part of the daily routine:
 1. `onchain_checkin()` — earn Karma + streak bonus
 2. `get_profile()` — check current karma
-3. If karma >= 120,000 → spin karma wheel for xFISH rewards
+3. If karma >= 120,000 AND 2,000+ quest points → call `spin_karma_wheel()` for xFISH rewards
 4. Continue with normal game loop
 
 **Note:** Karma scores update at 2:00 AM UTC daily. After first staking, the player must wait until the next 2 AM UTC reset before their karma reflects the stake and they become eligible for the karma wheel. Inform the player of this if they just staked.
@@ -182,7 +182,8 @@ Track throughout: fish caught, gold earned, XP earned, energy spent, sushi bough
                   • completed → proceed (karma loop runs in step 6)
 5.  DAILY       — claim_daily_reward()
 5b. CHECKIN     — onchain_checkin() if wallet has RON (Karma + streak bonus)
-6.  KARMA       — if STAKING_SETUP=completed and karma >= 120k: spin karma wheel for xFISH
+6.  KARMA       — if STAKING_SETUP=completed and karma >= 120k: call spin_karma_wheel()
+                  (costs ~0.12 RON for VRF fee, awards xFISH tokens)
 7.  CHESTS      — get_chests(), open any available. If open_chests() fails or returns
                   an error, just skip and move on — chests are bonus rewards, never a blocker.
                   (Leaderboard chests need minting first — skip those if minting fails.)
