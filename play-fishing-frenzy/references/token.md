@@ -29,6 +29,8 @@ Karma determines access to game features. Earned through:
 | 120,000 | Daily Karma wheel (xFISH rewards) |
 | 200,000 | Prestige Leaderboard eligibility |
 
+**Important: Karma scores update in-game at 2:00 AM UTC daily.** After staking FISH, the player's karma will NOT reflect the new stake until the next 2 AM UTC reset. Players must wait until after this reset before they become eligible for the xFISH karma wheel.
+
 ## Token Flow
 
 ```
@@ -46,6 +48,9 @@ Gameplay → xFISH (non-tradeable)
 | `get_wallet_balances()` | Check RON, FISH, and xFISH balances on-chain |
 | `stake_fish_tokens(amount, duration_months)` | Stake FISH tokens for Karma |
 | `onchain_checkin()` | Daily on-chain check-in (costs small RON fee) |
+| `get_staking_recommendation(fish_target)` | Get dynamic RON deposit recommendation with live prices |
+| `buy_fish_tokens(ron_amount, slippage_pct)` | Swap RON → FISH on Katana DEX |
+| `setup_fish_staking(fish_amount, duration_months)` | One-click: buy FISH + approve + stake (full flow) |
 
 **Not yet available:**
 - Convert xFISH → FISH (requires additional contract ABI discovery)

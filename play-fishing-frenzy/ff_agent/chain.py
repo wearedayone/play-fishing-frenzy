@@ -1,5 +1,9 @@
 """On-chain Ronin blockchain interactions for Fishing Frenzy Agent."""
 
+import time
+import urllib.request
+import json as _json
+
 from web3 import Web3
 from eth_account import Account
 from . import state
@@ -117,6 +121,34 @@ STAKE_ABI = [
             }
         ],
         "stateMutability": "view",
+        "type": "function",
+    },
+]
+
+KATANA_V2_ROUTER = "0x7d0556d55ca1a92708681e2e231733ebd922597d"
+WRON = "0xe514d9deb7966c8be0ca922de8a064264ea6bcd4"
+
+KATANA_ROUTER_ABI = [
+    {
+        "inputs": [
+            {"name": "amountIn", "type": "uint256"},
+            {"name": "path", "type": "address[]"},
+        ],
+        "name": "getAmountsOut",
+        "outputs": [{"name": "amounts", "type": "uint256[]"}],
+        "stateMutability": "view",
+        "type": "function",
+    },
+    {
+        "inputs": [
+            {"name": "amountOutMin", "type": "uint256"},
+            {"name": "path", "type": "address[]"},
+            {"name": "to", "type": "address"},
+            {"name": "deadline", "type": "uint256"},
+        ],
+        "name": "swapExactRONForTokens",
+        "outputs": [{"name": "amounts", "type": "uint256[]"}],
+        "stateMutability": "payable",
         "type": "function",
     },
 ]
@@ -241,6 +273,7 @@ def get_xfish_balance() -> float:
 def daily_checkin() -> dict:
     """Perform the daily on-chain check-in. Costs a small RON fee."""
     w3 = _get_w3()
+    wallet, _ = _get_wallet_and_account()
     contract = w3.eth.contract(
         address=Web3.to_checksum_address(CONTRACTS["daily_checkin"]),
         abi=CHECKIN_ABI,
@@ -252,6 +285,10 @@ def daily_checkin() -> dict:
     # Build and send the transaction
     tx = contract.functions.checkIn().build_transaction({
         "value": price,
+        "from": wallet["address"],
+        "chainId": CHAIN_ID,
+        "nonce": w3.eth.get_transaction_count(wallet["address"]),
+        "gasPrice": w3.eth.gas_price,
     })
     tx_hash = _send_tx(w3, tx)
 
@@ -361,16 +398,28 @@ def stake_fish(amount: float, duration_months: int) -> dict:
         wallet["address"], stake_address
     ).call()
 
+    tx_defaults = {
+        "from": wallet["address"],
+        "chainId": CHAIN_ID,
+        "gasPrice": w3.eth.gas_price,
+    }
+
     if allowance < amount_wei:
         approve_tx = fish_contract.functions.approve(
             stake_address, amount_wei
-        ).build_transaction({})
+        ).build_transaction({
+            **tx_defaults,
+            "nonce": w3.eth.get_transaction_count(wallet["address"]),
+        })
         _send_tx(w3, approve_tx)
 
     # Step 2: Stake
     stake_tx = stake_contract.functions.stakeERC20(
         fish_address, amount_wei, duration_secs
-    ).build_transaction({})
+    ).build_transaction({
+        **tx_defaults,
+        "nonce": w3.eth.get_transaction_count(wallet["address"]),
+    })
     tx_hash = _send_tx(w3, stake_tx)
 
     return {
@@ -379,4 +428,226 @@ def stake_fish(amount: float, duration_months: int) -> dict:
         "amount": amount,
         "duration_months": duration_months,
         "duration_seconds": duration_secs,
+    }
+
+
+# ============================================================
+# Katana DEX — RON → FISH Swap (V3 via AggregateRouter)
+# ============================================================
+
+AGGREGATE_ROUTER = "0x5f0acdd3ec767514ff1bf7e79949640bf94576bd"
+V3_FACTORY_PROXY = "0x1f0B70d9A137e3cAEF0ceAcD312BC5f81Da0cC0c"
+QUOTER_V2 = "0x84Ab2f9Fdc4Bf66312b0819D879437b8749EfDf2"
+
+# V3 multi-hop path: WRON -(fee 100)-> USDC -(fee 3000)-> FISH
+# Encodes as: token(20 bytes) + fee(3 bytes) + token(20 bytes) + fee(3 bytes) + token(20 bytes)
+_V3_SWAP_PATH = (
+    bytes.fromhex(WRON[2:])
+    + (100).to_bytes(3, "big")
+    + bytes.fromhex(CONTRACTS["usdc"][2:])
+    + (3000).to_bytes(3, "big")
+    + bytes.fromhex(CONTRACTS["fish_token"][2:])
+)
+
+# AggregateRouter command constants
+_CMD_WRAP_ETH = 0x0b
+_CMD_V3_SWAP_EXACT_IN = 0x00
+_CMD_SWEEP = 0x04
+
+# Sentinel addresses used by the AggregateRouter
+_ROUTER_AS_RECIPIENT = "0x0000000000000000000000000000000000000002"
+_MSG_SENDER = "0x0000000000000000000000000000000000000001"
+
+AGGREGATE_ROUTER_ABI = [
+    {
+        "inputs": [
+            {"name": "commands", "type": "bytes"},
+            {"name": "inputs", "type": "bytes[]"},
+            {"name": "deadline", "type": "uint256"},
+        ],
+        "name": "execute",
+        "outputs": [],
+        "stateMutability": "payable",
+        "type": "function",
+    },
+]
+
+QUOTER_V2_ABI = [
+    {
+        "inputs": [
+            {"name": "path", "type": "bytes"},
+            {"name": "amountIn", "type": "uint256"},
+        ],
+        "name": "quoteExactInput",
+        "outputs": [
+            {"name": "amountOut", "type": "uint256"},
+            {"name": "sqrtPriceX96AfterList", "type": "uint160[]"},
+            {"name": "initializedTicksCrossedList", "type": "uint32[]"},
+            {"name": "gasEstimate", "type": "uint256"},
+        ],
+        "stateMutability": "nonpayable",
+        "type": "function",
+    },
+]
+
+
+def get_fish_quote(ron_amount: float) -> dict:
+    """Get an on-chain quote for swapping RON → FISH via Katana V3.
+
+    Uses the multi-hop route: WRON → USDC (fee 100) → FISH (fee 3000)
+    via the QuoterV2 contract for accurate pricing.
+
+    Args:
+        ron_amount: Amount of RON to swap (human-readable, e.g. 50.0).
+
+    Returns:
+        Dict with ron_in, fish_out, and price_per_fish.
+    """
+    w3 = _get_w3()
+    quoter = w3.eth.contract(
+        address=Web3.to_checksum_address(QUOTER_V2),
+        abi=QUOTER_V2_ABI,
+    )
+    amount_in_wei = w3.to_wei(ron_amount, "ether")
+    result = quoter.functions.quoteExactInput(_V3_SWAP_PATH, amount_in_wei).call()
+    fish_out = float(w3.from_wei(result[0], "ether"))
+    price_per_fish = ron_amount / fish_out if fish_out > 0 else 0
+    return {
+        "ron_in": ron_amount,
+        "fish_out": round(fish_out, 2),
+        "price_per_fish": round(price_per_fish, 6),
+    }
+
+
+def buy_fish_with_ron(ron_amount: float, slippage_pct: float = 1.0) -> dict:
+    """Swap RON → FISH via Katana V3 AggregateRouter.
+
+    Uses the multi-hop route: RON → WRON → USDC → FISH
+    Executed as three commands via the AggregateRouter:
+      1. WRAP_ETH — wrap RON to WRON
+      2. V3_SWAP_EXACT_IN — swap WRON��USDC→FISH via V3 pools
+      3. SWEEP — send remaining FISH to the caller
+
+    Args:
+        ron_amount: Amount of RON to spend.
+        slippage_pct: Slippage tolerance in percent (default 1%).
+
+    Returns:
+        Dict with success, tx_hash, ron_spent, fish_received.
+    """
+    w3 = _get_w3()
+    wallet, account = _get_wallet_and_account()
+
+    amount_in_wei = w3.to_wei(ron_amount, "ether")
+
+    # Get V3 quote for min output
+    quoter = w3.eth.contract(
+        address=Web3.to_checksum_address(QUOTER_V2),
+        abi=QUOTER_V2_ABI,
+    )
+    quote_result = quoter.functions.quoteExactInput(_V3_SWAP_PATH, amount_in_wei).call()
+    expected_fish_wei = quote_result[0]
+    min_fish_wei = int(expected_fish_wei * (100 - slippage_pct) / 100)
+
+    deadline = int(time.time()) + 300  # 5 minutes
+
+    # Build AggregateRouter commands:
+    # Cmd 1: WRAP_ETH — wrap RON into WRON inside the router
+    #   abi.encode(address recipient, uint256 amountMin)
+    wrap_input = w3.codec.encode(
+        ["address", "uint256"],
+        [Web3.to_checksum_address(_ROUTER_AS_RECIPIENT), amount_in_wei],
+    )
+
+    # Cmd 2: V3_SWAP_EXACT_IN — multi-hop swap through V3 pools
+    #   abi.encode(address recipient, uint256 amountIn, uint256 amountOutMin, bytes path, bool payerIsUser)
+    swap_input = w3.codec.encode(
+        ["address", "uint256", "uint256", "bytes", "bool"],
+        [
+            Web3.to_checksum_address(_ROUTER_AS_RECIPIENT),
+            amount_in_wei,
+            min_fish_wei,
+            _V3_SWAP_PATH,
+            False,  # payer is router (has the WRON from wrap)
+        ],
+    )
+
+    # Cmd 3: SWEEP — send all FISH from router to caller
+    #   abi.encode(address token, address recipient, uint256 amountMin)
+    sweep_input = w3.codec.encode(
+        ["address", "address", "uint256"],
+        [
+            Web3.to_checksum_address(CONTRACTS["fish_token"]),
+            Web3.to_checksum_address(_MSG_SENDER),
+            min_fish_wei,
+        ],
+    )
+
+    commands = bytes([_CMD_WRAP_ETH, _CMD_V3_SWAP_EXACT_IN, _CMD_SWEEP])
+    inputs = [wrap_input, swap_input, sweep_input]
+
+    router = w3.eth.contract(
+        address=Web3.to_checksum_address(AGGREGATE_ROUTER),
+        abi=AGGREGATE_ROUTER_ABI,
+    )
+
+    tx = router.functions.execute(commands, inputs, deadline).build_transaction({
+        "value": amount_in_wei,
+        "from": account.address,
+        "chainId": CHAIN_ID,
+        "nonce": w3.eth.get_transaction_count(account.address),
+        "gasPrice": w3.eth.gas_price,
+    })
+
+    tx_hash = _send_tx(w3, tx)
+
+    fish_received = float(w3.from_wei(expected_fish_wei, "ether"))
+    return {
+        "success": True,
+        "tx_hash": tx_hash,
+        "ron_spent": ron_amount,
+        "fish_received": round(fish_received, 2),
+    }
+
+
+# ============================================================
+# CoinGecko Price Helper
+# ============================================================
+
+def get_deposit_recommendation(fish_target: int = 10000, gas_buffer: float = 5.0) -> dict:
+    """Calculate how much RON to deposit for buying FISH + gas fees.
+
+    Fetches live RON and FISH prices from CoinGecko, then calculates
+    the total RON needed to buy fish_target FISH plus a gas buffer.
+
+    Args:
+        fish_target: Number of FISH tokens to buy (default 10,000).
+        gas_buffer: Extra RON to reserve for gas fees (default 5.0).
+
+    Returns:
+        Dict with recommended_ron, prices, and breakdown.
+    """
+    url = "https://api.coingecko.com/api/v3/simple/price?ids=ronin,fishing-frenzy&vs_currencies=usd"
+    req = urllib.request.Request(url, headers={"Accept": "application/json"})
+    with urllib.request.urlopen(req, timeout=10) as resp:
+        data = _json.loads(resp.read())
+
+    ron_usd = data.get("ronin", {}).get("usd", 0)
+    fish_usd = data.get("fishing-frenzy", {}).get("usd", 0)
+
+    if ron_usd <= 0 or fish_usd <= 0:
+        raise RuntimeError(f"Failed to fetch prices: RON=${ron_usd}, FISH=${fish_usd}")
+
+    ron_for_fish = (fish_target * fish_usd) / ron_usd
+    import math
+    recommended_ron = math.ceil(ron_for_fish + gas_buffer)
+
+    return {
+        "recommended_ron": recommended_ron,
+        "fish_target": fish_target,
+        "fish_price_usd": fish_usd,
+        "ron_price_usd": ron_usd,
+        "gas_buffer": gas_buffer,
+        "ron_for_fish": round(ron_for_fish, 1),
+        "breakdown": f"~{round(ron_for_fish)} RON for {fish_target:,} FISH + ~{gas_buffer:.0f} RON for gas",
     }

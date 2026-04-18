@@ -31,10 +31,13 @@
 
 ## Karma Wheel (xFISH)
 
-- Accounts with **120,000+ Karma** unlock an additional wheel spin
-- This wheel awards **xFISH** tokens, which have in-game value (can be spent in-game)
-- Check karma via `get_profile()` — the `karma` field
-- If karma >= 120k, spin this wheel each session for free xFISH
+- Requires **BOTH** conditions to spin:
+  1. **Karma >= 120,000** — from staking FISH tokens (10,000 FISH staked for 12 months ≈ 120K karma)
+  2. **2,000+ daily quest points earned that day** — same requirement as the free daily wheel
+- This wheel awards **xFISH** tokens (~200 xFISH/day average for new players, more at higher karma)
+- Check eligibility via `get_quests()` → `wheel.token.canSpin`
+- Both conditions reset/persist differently: karma is persistent, quest points reset daily at 2:00 AM UTC
+- **This means completing daily quests is essential every session** — without 2,000 pts, the karma wheel is locked even with enough karma
 
 ## Workflow
 

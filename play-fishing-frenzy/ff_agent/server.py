@@ -744,30 +744,23 @@ def get_chests() -> str:
 
 
 def _extract_chest_ids(inv) -> list[str]:
-    """Extract chest IDs from any inventory response format."""
+    """Extract openable chest userItemIds from inventory response.
+
+    The API returns: {"inGame": [{"userItemIds": [...], "canOpen": true, ...}], "inWallet": [...]}
+    Each chest group has userItemIds — the individual instance IDs needed to open.
+    Only include chests where canOpen is true (skip NFT chests that need minting).
+    """
     ids = []
-    items = []
-    if isinstance(inv, list):
-        items = inv
-    elif isinstance(inv, dict):
-        # Try all common response shapes
-        for key in ("chests", "data", "items", "inventory"):
-            candidate = inv.get(key)
-            if isinstance(candidate, list):
-                items = candidate
-                break
-        if not items:
-            # Single chest object
-            cid = inv.get("_id") or inv.get("id")
-            if cid:
-                return [str(cid)]
-    for c in items:
-        if isinstance(c, dict):
-            cid = c.get("_id") or c.get("id")
-            if cid:
-                ids.append(str(cid))
-        elif isinstance(c, str):
-            ids.append(c)
+    if isinstance(inv, dict):
+        # Primary format: {"inGame": [...], "inWallet": [...]}
+        chests = inv.get("inGame", []) + inv.get("inWallet", [])
+        for chest in chests:
+            if not isinstance(chest, dict):
+                continue
+            if not chest.get("canOpen", False):
+                continue
+            user_item_ids = chest.get("userItemIds", [])
+            ids.extend(str(uid) for uid in user_item_ids)
     return ids
 
 
@@ -776,7 +769,8 @@ def open_chests(chest_ids: str = "") -> str:
     """Open chests from inventory. Opens all non-NFT chests if no IDs specified.
 
     Args:
-        chest_ids: Comma-separated chest IDs to open. If empty, opens all available chests."""
+        chest_ids: Comma-separated chest IDs to open (use userItemIds from get_chests).
+                   If empty, opens all available chests automatically."""
     try:
         id_list = [x.strip() for x in chest_ids.split(",") if x.strip()] if chest_ids else []
         if not id_list:
@@ -786,11 +780,31 @@ def open_chests(chest_ids: str = "") -> str:
         if not id_list:
             return json.dumps({"message": "No chests to open"})
 
-        if len(id_list) == 1:
-            result = api.open_chest(id_list[0])
-        else:
-            result = api.open_chests_batch(id_list)
-        return json.dumps(result, indent=2)
+        # Open chests one at a time (batch endpoint uses a different format)
+        results = []
+        for cid in id_list:
+            try:
+                result = api.open_chest(cid)
+                items = result.get("totalItems", [])
+                results.append({"chest_id": cid, "items": items})
+            except Exception as e:
+                results.append({"chest_id": cid, "error": str(e)})
+
+        # Summarize
+        total_items: dict[str, int] = {}
+        opened = sum(1 for r in results if "items" in r)
+        for r in results:
+            for item in r.get("items", []):
+                name = item.get("name", "Unknown")
+                qty = item.get("quantity", 1)
+                total_items[name] = total_items.get(name, 0) + qty
+
+        return json.dumps({
+            "opened": opened,
+            "failed": len(results) - opened,
+            "total_items": total_items,
+            "details": results
+        }, indent=2)
     except Exception as e:
         return json.dumps(_tool_error(e))
 
@@ -951,6 +965,128 @@ def stake_fish_tokens(amount: float, duration_months: int = 1) -> str:
                          params={"amount": amount, "duration_months": duration_months},
                          result=result)
         return json.dumps(result, indent=2)
+    except Exception as e:
+        return json.dumps(_tool_error(e))
+
+
+@server.tool()
+def get_staking_recommendation(fish_target: int = 10000) -> str:
+    """Get a dynamic RON deposit recommendation for buying and staking FISH.
+
+    Fetches live prices from CoinGecko and calculates how much RON to deposit
+    to buy the target FISH amount plus gas for transactions.
+
+    Args:
+        fish_target: Number of FISH to buy and stake (default 10,000)."""
+    try:
+        from ff_agent import chain
+        rec = chain.get_deposit_recommendation(fish_target=fish_target)
+        return json.dumps(rec, indent=2)
+    except Exception as e:
+        return json.dumps(_tool_error(e))
+
+
+@server.tool()
+def buy_fish_tokens(ron_amount: float, slippage_pct: float = 1.0) -> str:
+    """Buy FISH tokens by swapping RON on Katana DEX.
+
+    Args:
+        ron_amount: Amount of RON to spend on FISH.
+        slippage_pct: Slippage tolerance in percent (default 1%)."""
+    try:
+        from ff_agent import chain
+        result = chain.buy_fish_with_ron(ron_amount, slippage_pct)
+        state.log_action("buy_fish_tokens",
+                         params={"ron_amount": ron_amount, "slippage_pct": slippage_pct},
+                         result=result)
+        return json.dumps(result, indent=2)
+    except Exception as e:
+        return json.dumps(_tool_error(e))
+
+
+@server.tool()
+def setup_fish_staking(fish_amount: float = 10000, duration_months: int = 12) -> str:
+    """One-click flow: buy FISH on Katana DEX + approve + stake for Karma.
+
+    Handles the full staking setup:
+    1. Check RON balance (enough for swap + gas?)
+    2. Get quote for the FISH amount
+    3. Swap RON → FISH via Katana
+    4. Approve FISH spending for the stake contract
+    5. Stake FISH for the specified duration
+
+    Args:
+        fish_amount: FISH tokens to buy and stake (default 10,000).
+        duration_months: Staking lock duration in months (default 12)."""
+    try:
+        from ff_agent import chain
+
+        steps = []
+
+        # Step 1: Check RON balance
+        ron_balance = chain.get_ron_balance()
+        steps.append({"step": "check_balance", "ron_balance": round(ron_balance, 4)})
+
+        # Step 2: Get quote — how much RON needed for fish_amount FISH?
+        # Use binary search to find the right RON amount
+        # Start with a rough estimate via CoinGecko
+        rec = chain.get_deposit_recommendation(fish_target=int(fish_amount), gas_buffer=2.0)
+        ron_for_swap = rec["ron_for_fish"]
+
+        # Verify with on-chain quote and adjust
+        quote = chain.get_fish_quote(ron_for_swap)
+        # If quote gives us less than target, bump up the RON
+        if quote["fish_out"] < fish_amount:
+            ron_for_swap = ron_for_swap * (fish_amount / quote["fish_out"]) * 1.02  # 2% buffer
+            quote = chain.get_fish_quote(ron_for_swap)
+
+        gas_needed = 2.0  # RON for approve + stake + swap gas
+        total_ron_needed = ron_for_swap + gas_needed
+
+        if ron_balance < total_ron_needed:
+            return json.dumps({
+                "success": False,
+                "error_type": "resource_depleted",
+                "error": f"Need ~{total_ron_needed:.1f} RON but only have {ron_balance:.4f} RON",
+                "suggestion": f"Deposit at least {rec['recommended_ron']} RON to your wallet",
+                "wallet": chain.state.get_wallet().get("address", "unknown"),
+            }, indent=2)
+
+        steps.append({
+            "step": "quote",
+            "ron_to_spend": round(ron_for_swap, 2),
+            "expected_fish": quote["fish_out"],
+        })
+
+        # Step 3: Swap RON → FISH
+        swap_result = chain.buy_fish_with_ron(ron_for_swap, slippage_pct=1.5)
+        steps.append({
+            "step": "swap",
+            "tx_hash": swap_result["tx_hash"],
+            "ron_spent": swap_result["ron_spent"],
+            "fish_received": swap_result["fish_received"],
+        })
+
+        # Step 4 + 5: Approve + Stake (stake_fish handles approval internally)
+        actual_fish = swap_result["fish_received"]
+        stake_amount = min(actual_fish, fish_amount)
+        stake_result = chain.stake_fish(stake_amount, duration_months)
+        steps.append({
+            "step": "stake",
+            "tx_hash": stake_result["tx_hash"],
+            "amount_staked": stake_result["amount"],
+            "duration_months": stake_result["duration_months"],
+        })
+
+        state.log_action("setup_fish_staking",
+                         params={"fish_amount": fish_amount, "duration_months": duration_months},
+                         result={"swap_hash": swap_result["tx_hash"], "stake_hash": stake_result["tx_hash"]})
+
+        return json.dumps({
+            "success": True,
+            "summary": f"Swapped {swap_result['ron_spent']:.1f} RON → {swap_result['fish_received']:.0f} FISH, staked {stake_amount:.0f} FISH for {duration_months} months",
+            "steps": steps,
+        }, indent=2)
     except Exception as e:
         return json.dumps(_tool_error(e))
 

@@ -92,3 +92,18 @@ RON_REMINDER: true
 ```
 
 - `RON_REMINDER`: Show the RON deposit reminder at session start when wallet has 0 RON balance. Set to `false` to dismiss permanently.
+
+## Staking
+
+```
+STAKING_SETUP: pending
+FISH_STAKING_TARGET: 10000
+STAKING_DURATION: 12
+```
+
+- `STAKING_SETUP`: Staking onboarding state
+  - `pending` — not yet set up, show deposit/staking prompts
+  - `deferred` — user said "maybe later", remind next session
+  - `completed` — FISH staked, run daily karma loop
+- `FISH_STAKING_TARGET`: Number of FISH tokens to buy and stake (default 10,000)
+- `STAKING_DURATION`: Lock duration in months (default 12)
