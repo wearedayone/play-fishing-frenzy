@@ -148,10 +148,8 @@ pip3 install mcp[cli] httpx websockets eth-account
 
 ## Report Issues
 
-If something breaks or feels wrong, note:
-1. What you typed
-2. What the agent did (copy the output)
-3. Your Python version (`python3 --version`)
-4. Your OS
+If something breaks or feels wrong, file a bug report:
 
-Send to the team or file an issue on the repo.
+**[Report a Bug](https://github.com/wearedayone/play-fishing-frenzy/issues/new?template=bug_report.yml)**
+
+The form will ask for your AI tool, Python version, OS, and a description of what went wrong. Copy-paste the agent output if you can — it helps a lot.

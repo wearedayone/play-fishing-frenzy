@@ -280,3 +280,13 @@ Track throughout: fish caught, gold earned, XP earned, energy spent, sushi bough
   (Reel for catching rarer fish, Lucky Charm for random drops, Icebox for gold on sells)
 
 If the user specified a strategy argument (e.g. `/play-fishing-frenzy grind`), use that. Otherwise default to **balanced**.
+
+## Error Handling
+
+When you encounter a game-breaking error — login failure, MCP tool not found, repeated API errors, or unrecoverable exceptions — show this after your error message:
+
+```
+Hit a bug? Report it: https://github.com/wearedayone/play-fishing-frenzy/issues/new?template=bug_report.yml
+```
+
+Do NOT show this for routine gameplay events like "fish escaped", "not enough energy", "not enough gold", or "quest already claimed".

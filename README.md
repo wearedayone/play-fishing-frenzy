@@ -148,7 +148,7 @@ When you run `/play-fishing-frenzy`, your agent displays a live game dashboard:
 ```
 ╔══════════════════════════════════════════════════╗
 ║  🎣 FISHING FRENZY AGENT                        ║
-║  Strategy: BALANCED                              ║
+║  Strategy: BALANCED  ·  League: Open             ║
 ╠══════════════════════════════════════════════════╣
 ║  👤 FishBot_0x3e1C  ·  Lv.25                    ║
 ║  ⚡ Energy: 22/30    ██████████████░░░░░ 73%     ║
@@ -257,6 +257,12 @@ Fishing Frenzy API + Ronin Blockchain (SIWE auth, wallet ops)
 python3 -m pytest tests/ --skip-live -v    # Offline suite (no API calls)
 python3 -m pytest tests/ -v                # Full suite (needs live connection)
 ```
+
+## Report a Bug
+
+Something not working? [**File a bug report**](https://github.com/wearedayone/play-fishing-frenzy/issues/new?template=bug_report.yml) — it takes 30 seconds.
+
+Have an idea? [**Request a feature**](https://github.com/wearedayone/play-fishing-frenzy/issues/new?template=feature_request.yml).
 
 ## License
 

@@ -9,7 +9,7 @@ keywords = ["fishing-frenzy", "web3", "game-agent", "ronin", "mcp", "claude-code
 
 [project.urls]
 Homepage = "https://fishingfrenzy.co"
-Repository = "https://github.com/wearedayone/fishing-frenzy-agent"
+Repository = "https://github.com/wearedayone/play-fishing-frenzy"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
