@@ -14,7 +14,7 @@ Works with any AI tool that supports [MCP](https://modelcontextprotocol.io) — 
 ## Install
 
 ```bash
-npx skills add wearedayone/play-fishing-frenzy --all --global -y && bash ~/.agents/skills/play-fishing-frenzy/scripts/setup.sh
+npx skills add unchartedgg/play-fishing-frenzy --all --global -y && bash ~/.agents/skills/play-fishing-frenzy/scripts/setup.sh
 ```
 
 This installs the skill + Python dependencies, and registers the MCP server for every detected AI tool (Claude Code, Cursor, Cline, Windsurf, OpenClaw).
@@ -29,7 +29,7 @@ Restart your AI tool, then type:
 <summary>Alternative: clone manually</summary>
 
 ```bash
-git clone https://github.com/wearedayone/play-fishing-frenzy
+git clone https://github.com/unchartedgg/play-fishing-frenzy
 cd fishing-frenzy-agent
 bash scripts/setup.sh
 ```
@@ -260,9 +260,9 @@ python3 -m pytest tests/ -v                # Full suite (needs live connection)
 
 ## Report a Bug
 
-Something not working? [**File a bug report**](https://github.com/wearedayone/play-fishing-frenzy/issues/new?template=bug_report.yml) — it takes 30 seconds.
+Something not working? [**File a bug report**](https://github.com/unchartedgg/play-fishing-frenzy/issues/new?template=bug_report.yml) — it takes 30 seconds.
 
-Have an idea? [**Request a feature**](https://github.com/wearedayone/play-fishing-frenzy/issues/new?template=feature_request.yml).
+Have an idea? [**Request a feature**](https://github.com/unchartedgg/play-fishing-frenzy/issues/new?template=feature_request.yml).
 
 ## License
 
