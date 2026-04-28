@@ -14,10 +14,10 @@ Works with any AI tool that supports [MCP](https://modelcontextprotocol.io) — 
 ## Install
 
 ```bash
-npx skills add unchartedgg/play-fishing-frenzy --all --global -y && bash ~/.agents/skills/play-fishing-frenzy/scripts/setup.sh
+npx skills add unchartedgg/play-fishing-frenzy
 ```
 
-This installs the skill + Python dependencies, and registers the MCP server for every detected AI tool (Claude Code, Cursor, Cline, Windsurf, OpenClaw).
+This installs the skill and registers the MCP server. Python dependencies install automatically on first run.
 
 Restart your AI tool, then type:
 
@@ -30,22 +30,22 @@ Restart your AI tool, then type:
 
 ```bash
 git clone https://github.com/unchartedgg/play-fishing-frenzy
-cd fishing-frenzy-agent
-bash scripts/setup.sh
+cd play-fishing-frenzy/play-fishing-frenzy
+bash scripts/bootstrap.sh  # installs deps + launches server
 ```
 </details>
 
 <details>
 <summary>Manual MCP setup (if your tool wasn't auto-detected)</summary>
 
-The MCP server command is: `python3 <path>/ff_agent/server.py` (stdio transport).
+The MCP server command is: `bash <path>/scripts/bootstrap.sh` (stdio transport). This auto-installs Python dependencies on first run.
 
-Replace `<path>` with `~/.agents/skills/play-fishing-frenzy` (npx install) or your clone directory.
+Replace `<path>` with `~/.agents/skills/play-fishing-frenzy` (npx install) or your clone's `play-fishing-frenzy` directory.
 
 #### Claude Code
 
 ```bash
-claude mcp add fishing-frenzy -- python3 <path>/ff_agent/server.py
+claude mcp add fishing-frenzy -- bash <path>/scripts/bootstrap.sh
 ```
 
 #### Cursor
@@ -56,8 +56,8 @@ Add to `~/.cursor/mcp.json`:
 {
   "mcpServers": {
     "fishing-frenzy": {
-      "command": "python3",
-      "args": ["<path>/ff_agent/server.py"]
+      "command": "bash",
+      "args": ["<path>/scripts/bootstrap.sh"]
     }
   }
 }
@@ -71,8 +71,8 @@ Add to `~/.cline/mcp_settings.json`:
 {
   "mcpServers": {
     "fishing-frenzy": {
-      "command": "python3",
-      "args": ["<path>/ff_agent/server.py"]
+      "command": "bash",
+      "args": ["<path>/scripts/bootstrap.sh"]
     }
   }
 }
@@ -86,8 +86,8 @@ Add to `~/.windsurf/mcp.json`:
 {
   "mcpServers": {
     "fishing-frenzy": {
-      "command": "python3",
-      "args": ["<path>/ff_agent/server.py"]
+      "command": "bash",
+      "args": ["<path>/scripts/bootstrap.sh"]
     }
   }
 }
@@ -96,7 +96,7 @@ Add to `~/.windsurf/mcp.json`:
 #### OpenClaw
 
 ```bash
-openclaw mcp set fishing-frenzy '{"command":"python3","args":["<path>/ff_agent/server.py"]}'
+openclaw mcp set fishing-frenzy '{"command":"bash","args":["<path>/scripts/bootstrap.sh"]}'
 ```
 
 </details>
@@ -196,7 +196,8 @@ fishing-frenzy-agent/
 │   ├── state.py              ← SQLite state persistence
 │   └── wallet.py             ← Ethereum wallet management
 ├── scripts/
-│   ├── setup.sh              ← One-command install
+│   ├── bootstrap.sh          ← Auto-installs deps + launches server
+│   ├── setup.sh              ← Full setup (multi-tool registration)
 │   └── status.py             ← Agent status check
 ├── requirements.txt
 └── LICENSE                   ← MIT

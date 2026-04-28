@@ -18,20 +18,18 @@ Works with Claude Code, Cursor, Cline, Windsurf, OpenClaw, and any MCP-compatibl
 ## Install
 
 ```bash
-npx skills add unchartedgg/play-fishing-frenzy --all --global -y && bash ~/.agents/skills/play-fishing-frenzy/scripts/setup.sh
+npx skills add unchartedgg/play-fishing-frenzy
 ```
 
-This installs the skill, Python dependencies, and registers the MCP server for every detected AI tool.
-
-Restart your AI tool. That's it.
+Restart your AI tool. Python dependencies install automatically on first run.
 
 <details>
 <summary>Alternative: clone manually</summary>
 
 ```bash
 git clone https://github.com/unchartedgg/play-fishing-frenzy
-cd fishing-frenzy-agent
-bash scripts/setup.sh
+cd play-fishing-frenzy/play-fishing-frenzy
+bash scripts/bootstrap.sh
 ```
 </details>
 
@@ -129,14 +127,16 @@ Edit **`SKILL.md`** to change the agent's decision-making logic itself.
 
 **"Tool not found" or MCP errors:**
 ```bash
-# Re-run setup to re-register the MCP server
-bash ~/.agents/skills/play-fishing-frenzy/scripts/setup.sh
+# Re-install the skill
+npx skills add unchartedgg/play-fishing-frenzy
 # Then restart your AI tool
 ```
 
 **"No module named 'mcp'" or import errors:**
 ```bash
-pip3 install mcp[cli] httpx websockets eth-account
+# Delete the venv to force a fresh dependency install on next run
+rm -rf ~/.agents/skills/play-fishing-frenzy/.venv
+# Then restart your AI tool — deps will reinstall automatically
 ```
 
 **Agent seems stuck:**
