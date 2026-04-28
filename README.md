@@ -137,9 +137,12 @@ Choose a strategy:
 | Equipment | `equip_rod`, `repair_rod`, `collect_pet_fish` | Rod management, pet collection |
 | Diving | `buy_diving_ticket`, `dive` | Grid-based diving game (Level 30+) |
 | Upgrades | `get_accessories`, `upgrade_accessory` | Spend upgrade points on accessories |
+| On-Chain | `buy_fish_tokens`, `stake_fish_tokens`, `onchain_checkin` | DEX swaps (RON/USDC → FISH), token staking, Karma |
+| NFTs | `mint_leaderboard_chests`, `open_chests`, `collect_fish` | Mint, open, and collect NFT items |
+| Wallet | `get_wallet_balances`, `get_staking_recommendation` | On-chain balances, staking advice |
 | Stats | `get_leaderboard`, `get_session_stats` | Rankings, performance tracking |
 
-36 tools total across all game systems.
+36 tools total across 11 game systems.
 
 ## Demo
 
